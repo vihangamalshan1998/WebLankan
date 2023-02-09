@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use Exception;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class UserController extends Controller
 {
@@ -14,8 +16,16 @@ class UserController extends Controller
      */
     public function index()
     {
-        $users = User::paginate(config('app.pagination'));
-        return view('user.list', ['users' => $users]);
+        try {
+            if (!Auth::check()) {
+                return view('index');
+            } else {
+                $users = User::paginate(config('app.pagination'));
+                return view('user.list', ['users' => $users]);
+            }
+        } catch (Exception $th) {
+            //throw $th;
+        }
     }
 
     /**
@@ -25,7 +35,7 @@ class UserController extends Controller
      */
     public function create()
     {
-        //
+        return view('user.create');
     }
 
     /**
@@ -36,7 +46,19 @@ class UserController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        try {
+            $user = new User();
+            $user->name = $request->name;
+            $user->email = $request->email;
+            $user->phone = $request->number;
+            $user->address = $request->address;
+            $user->password = bcrypt($request->password);
+            $user->confirm_password = bcrypt($request->co_password);
+            $user->save();
+            return redirect('user')->with('status', 'User added');
+        } catch (Exception $th) {
+            return redirect('user')->with('status', 'User not added');
+        }
     }
 
     /**
@@ -45,9 +67,9 @@ class UserController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function show($id)
+    public function show(User $user)
     {
-        //
+        return view('user.view', ['user' => $user]);
     }
 
     /**
@@ -68,9 +90,19 @@ class UserController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id)
+    public function update(Request $request, User $user)
     {
-        //
+        try {
+            $user->name = $request->name;
+            $user->email = $request->email;
+            $user->phone = $request->number;
+            $user->address = $request->address;
+            $user->save();
+            return redirect('user')->with('status', 'User updated');
+        } catch (Exception $th) {
+            return redirect('user')->with('status', 'User not updated');
+        }
+
     }
 
     /**
@@ -79,8 +111,16 @@ class UserController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function destroy($id)
+    public function destroy(User $user)
     {
-        //
+        try {
+            $user->delete();
+            $this->message = "Delete successful";
+        } catch (Exception $ex) {
+            $this->message = "Delete unsuccessful. You may not be the owner.";
+            $this->code = 401;
+        }
+        return redirect('user/index')->withFlashInfo($this->message);
+
     }
 }

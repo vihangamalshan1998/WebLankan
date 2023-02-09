@@ -21,8 +21,13 @@
                 <div class="form-group row mb-5 mt-5">
                     <div class="col-md-8 offset-md-4">
                         <button class="btn btn-warning"><a style="text-decoration: none;"
-                                href="{{ url('user') }}"> User
+                                href="{{ url('user') }}">
+                                User
                                 List</a></button>
+                        <form method="post" class='form-horizontal' action="{{ route('logout') }}">
+                            @csrf
+                            <button class="btn btn-danger mt-5" type="submit">Log Out</button>
+                        </form>
                     </div>
                 </div>
             </div>
